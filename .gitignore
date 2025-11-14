@@ -1,4 +1,5 @@
 # Backup files
+*.bak
 CPU.sv.bak
 CPUstim.sv.bak
 control_logic.sv.bak
