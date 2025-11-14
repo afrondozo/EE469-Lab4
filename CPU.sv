@@ -9,6 +9,7 @@ module CPU (clk, rst);
 
 	logic [63:0] inst_address;					// instruction of the address
 	logic [31:0] instruction; 					// instruction from instructmem
+	logic [63:0] IFETCH_instruction;			// registered instruction
 	
 	logic [25:0] br_address; 					// immediate address for branching
 	logic [18:0] cond_address; 				// immediate address for branching with conditionals
@@ -47,27 +48,33 @@ module CPU (clk, rst);
 // Controller 
 //
 //-----------------------------------------------------------------------
-	
-	instructmem inst   (.clk, .address(inst_address), .instruction);
-	control_logic CL 	 (.instruction, .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
-									.br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
-									.negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));							
-									
-//-----------------------------------------------------------------------
-//
-// Datapath
-//
-//-----------------------------------------------------------------------
-	
+
+
+//=======================================================
+// IFETCH
+//=======================================================
 	// program counter
 	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken, .cond_address, .br_address);
+	instructmem inst   (.clk, .address(inst_address), .instruction); // do we need to register instruction?
+	register instructionFetch (.enable(1'b1), .writeData({32'b0, instruction}), .readData(IFETCH_instruction), .clk, .rst);
 	
-	// register and memory
-	regfile register (.clk, .RegWrite(reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(Dw), .ReadRegister1(Rn), 
-									.ReadRegister2(Ab), .WriteRegister(Rd));
-	datamem memory (.clk, .address(alu_result), .write_enable(mem_wr), .read_enable(1'b1), 
-								.write_data(Db), .xfer_size(4'b1000), .read_data(Dout));
-								
+//=======================================================
+// REG/DEC
+//=======================================================
+	// control logic happens right after IFETCH
+	control_logic CL 	 (.instruction(IFETCH_instruction[31:0]), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
+									.br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
+									.negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));
+	regfile register (.clk, .RegWrite(/*from wr stage*/), .ReadData1(Da), .ReadData2(Db), .WriteData(/*from wr stage*/), .ReadRegister1(Rn), 
+									.ReadRegister2(Ab), .WriteRegister(/*from wr stage*/));							
+	// implement REG/DEC reg....
+	// For accelerated branching:
+	// take PC from registered IFETCH.
+	//	calculate cond_address or br_address and send it right back to PC
+	
+//=======================================================
+// EXEC
+//=======================================================
 	// operations
 	alu ALU (.A(Da), .B, .cntrl(ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
 	shifter shifter (.value(Da), .direction(1'b1), .distance(SHAMT), .result(shift_result));
@@ -82,9 +89,32 @@ module CPU (clk, rst);
 	D_FF zero_reg (.q(zero_flag), .d(zero_mux_in), .clk, .reset(1'b0));
 	D_FF neg_reg(.q(neg_flag), .d(neg_mux_in), .clk, .reset(1'b0));
 	
+//=======================================================
+// MEM
+//=======================================================
+	
+	// register regWriteData
+	// D_FF reg_wr
+	// D_FF Rd
+	
+//=======================================================
+// WR
+//=======================================================
+
+
+	
+//-----------------------------------------------------------------------
+//
+// Datapath
+//
+//-----------------------------------------------------------------------
+	// memory
+	datamem memory (.clk, .address(alu_result), .write_enable(mem_wr), .read_enable(1'b1), 
+								.write_data(Db), .xfer_size(4'b1000), .read_data(Dout));
+	
+	
 	// muxes
 	genvar i;
-	
 	generate
 		for(i = 0; i < 64; i++) begin: datapath_muxes
 			multiplexer mux_imm_sel_0 (.a(D9_se[i]), .b(Imm12_se[i]), .s(imm_or_D9), .y(immediate[i]));
