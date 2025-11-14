@@ -1,0 +1,36 @@
+# Backup files
+CPU.sv.bak
+CPUstim.sv.bak
+control_logic.sv.bak
+decoder_3_to_8_enabled.sv.bak
+instructmem.sv.bak
+program_counter.sv.bak
+register.sv.bak
+signExtender.sv.bak
+
+# Simulation wave/do files
+CPUstim_wave.do
+control_logic_wave.do
+instructmem_wave.do
+program_counter_wave.do
+runlab.do
+
+# Quartus/ModelSim project files
+DE1_SoC.qpf
+DE1_SoC.qsf
+DE1_SoC.qws
+DE1_SoC.sdc
+DE1_SoC.srf
+ProgramTheDE1_SoC.cdf
+Launch_ModelSim.bat
+
+# Folders to ignore
+benchmarks/
+db/
+output_files/
+work/
+
+# ModelSim runtime files
+transcript
+vish_stacktrace.vstf
+vsim.wlf
