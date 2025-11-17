@@ -1,3 +1,4 @@
+// 64 bit register
 module register (enable, writeData, readData, clk, rst);
 	input logic enable, clk, rst;
 	input logic [63:0] writeData;
