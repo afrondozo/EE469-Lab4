@@ -1,10 +1,11 @@
 // clocked outputs from regFile
 
-module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, setFlags, shift, imm_or_D9, D9, Imm12, Shamt,
-							 clk, rst,
-							 REG_Da, REG_Db, REG_Rd, REG_mem_wr, REG_reg_wr, REG_alu_src, REG_ctrl, REG_mem_to_reg, REG_setFlags, REG_shift, REG_imm_or_D9, REG_D9, REG_Imm12, REG_Shamt);
+module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, setFlags, shift, imm_or_D9, D9, Imm12, Shamt, clk, rst, instruction,
+							 REG_Da, REG_Db, REG_Rd, REG_mem_wr, REG_reg_wr, REG_alu_src, REG_ctrl, REG_mem_to_reg, REG_setFlags, REG_shift, REG_imm_or_D9, 
+							 REG_D9, REG_Imm12, REG_Shamt, REG_instruction);
 	// === INPUTS ===
 	input logic [63:0] Da, Db;
+	input logic [31:0] instruction;
 	input logic [11:0] Imm12;
 	input logic [8:0] D9;
 	input logic [5:0] Shamt;
@@ -15,6 +16,7 @@ module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, set
 	
 	// === OUTPUTS ===
 	output logic [63:0] REG_Da, REG_Db;
+	output logic [31:0] REG_instruction;
 	output logic [11:0] REG_Imm12;
 	output logic [8:0] REG_D9;
 	output logic [5:0] REG_Shamt;
@@ -42,24 +44,29 @@ module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, set
 			D_FF reg0 (.d(Imm12[i]), .q(REG_Imm12[i]), .reset(rst), .clk(clk));
 		end
 		
+		// === INSTRUCTION ===
+		for (i = 0; i < 32; i++) begin: instruction
+			D_FF reg2 (.d(instruction[i]), .q(REG_instruction), .reset(rst), .clk(clk));
+		end
+		
 		// === D9 ===
 		for (i = 0; i < 9; i++) begin: d9
-			D_FF reg1 (.d(D9[i]), .q(REG_D9[i]), .reset(rst), .clk(clk));
+			D_FF reg2 (.d(D9[i]), .q(REG_D9[i]), .reset(rst), .clk(clk));
 		end
 		
 		// === SHAMT ===
 		for (i = 0; i < 6; i++) begin: shamt
-		  D_FF reg2 (.d(Shamt[i]), .q(REG_Shamt[i]), .reset(rst), .clk(clk));
+		  D_FF reg3 (.d(Shamt[i]), .q(REG_Shamt[i]), .reset(rst), .clk(clk));
 		end
 
 		// === RD ===
 		for (i = 0; i < 5; i++) begin: rd
-		  D_FF reg3 (.d(Rd[i]), .q(REG_Rd[i]), .reset(rst), .clk(clk));
+		  D_FF reg4 (.d(Rd[i]), .q(REG_Rd[i]), .reset(rst), .clk(clk));
 		end
 
 		// === CTRL ===
 		for (i = 0; i < 3; i++) begin: ctrl_bits
-		  D_FF reg4 (.d(ctrl[i]), .q(REG_ctrl[i]), .reset(rst), .clk(clk));
+		  D_FF reg5 (.d(ctrl[i]), .q(REG_ctrl[i]), .reset(rst), .clk(clk));
 		end
 	endgenerate
 endmodule 
