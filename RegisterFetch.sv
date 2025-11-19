@@ -45,7 +45,7 @@ module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, set
 		end
 		
 		// === INSTRUCTION ===
-		for (i = 0; i < 32; i++) begin: instruction
+		for (i = 0; i < 32; i++) begin: instr
 			D_FF reg2 (.d(instruction[i]), .q(REG_instruction), .reset(rst), .clk(clk));
 		end
 		

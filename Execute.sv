@@ -1,6 +1,6 @@
 // CLOCKED OUTPUTS FROM EXECUTE STAGE
-module Execute (ALU_result, Db, Rd, mem_wr, reg_wr, mem_to_reg, clk, rst,
-					 REG_ALU_result, REG_Db, REG_Rd, REG_mem_wr, REG_reg_wr, REG_mem_to_reg, instruction);
+module Execute (ALU_result, Db, Rd, mem_wr, reg_wr, mem_to_reg, clk, rst, instruction,
+					 REG_ALU_result, REG_Db, REG_Rd, REG_mem_wr, REG_reg_wr, REG_mem_to_reg, REG_instruction);
 	// === INPUTS ===
 	input logic [63:0] ALU_result, Db;
 	input logic [31:0] instruction;
@@ -22,7 +22,7 @@ module Execute (ALU_result, Db, Rd, mem_wr, reg_wr, mem_to_reg, clk, rst,
 	genvar i;
 	generate
 		// === INSTRUCTION ===
-		for (i = 0; i < 32; i++) begin: instruction
+		for (i = 0; i < 32; i++) begin: instr
 			D_FF reg2 (.d(instruction[i]), .q(REG_instruction), .reset(rst), .clk(clk));
 		end
 	endgenerate

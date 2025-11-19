@@ -83,12 +83,26 @@ module CPU (clk, rst);
 	control_logic CL 	 (.instruction(IFETCH_instruction[31:0]), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
 							  .br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
 							  .negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));
+	// forwarding logic happens in reg thru mem
+	logic [1:0] forward_sel;
+	forwarding_logic FL (.IFETCH_instruction, .REG_instruction, .EXEC_instruction, .forward_sel);
+	
 	// REG 2 LOC
 	generate
 		for(i = 0; i < 6; i++) begin: register_input_muxes
 			multiplexer mux_Reg2Loc_0 (.a(Rd[i]), .b(Rm[i]), .s(reg_2_loc), .y(Ab[i]));
 		end
 	endgenerate
+	
+	// DataA mux
+	logic [63:0] forwardDa, forwardDb;
+	generate
+		for (i = 0; i < 64; i++) begin: f1
+			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_sel), .out(forwardDa[i]));
+			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_sel), .out(forwardDb[i]));
+		end
+	endgenerate
+	
 	regfile register (.clk, .RegWrite(MEM_reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(MEM_Dw), .ReadRegister1(Rn), 
 									.ReadRegister2(Ab), .WriteRegister(MEM_Rd));	
 	// TO DO STILL:						
@@ -98,7 +112,7 @@ module CPU (clk, rst);
 		//	calculate cond_address or br_address and send it right back to PC
 	
 	// send register results to next stage
-	RegisterFetch regDec (.Da, .Db, .Rd, .mem_wr, .reg_wr, .alu_src, .ctrl, .mem_to_reg, .setFlags, .shift, .imm_or_D9, .D9, .Imm12, .Shamt, .clk, .rst, .instruction(IFETCH_instruction[31:0]),
+	RegisterFetch regDec (.Da(forwardDa), .Db(forwardDb), .Rd, .mem_wr, .reg_wr, .alu_src, .ctrl, .mem_to_reg, .setFlags, .shift, .imm_or_D9, .D9, .Imm12, .Shamt(SHAMT), .clk, .rst, .instruction(IFETCH_instruction[31:0]),
 								 .REG_Da, .REG_Db, .REG_Rd, .REG_mem_wr, .REG_reg_wr, .REG_alu_src, .REG_ctrl, .REG_mem_to_reg, 
 								 .REG_setFlags, .REG_shift, .REG_imm_or_D9, .REG_D9, .REG_Imm12, .REG_Shamt, .REG_instruction);
 	
