@@ -1,3 +1,4 @@
+`timescale 1ps/1ps
 module multiplexer (a, b, s, y); // a is q, b is d for dff
 	input logic a, b, s;
 	output logic y;

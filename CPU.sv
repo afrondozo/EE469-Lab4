@@ -45,7 +45,7 @@ module CPU (clk, rst);
 	genvar i; // for muxes
 	
 	// === INSTRUCTION FETCH OUTPUT ===
-	logic [63:0] IFETCH_instruction;			// registered instruction
+	logic [31:0] IFETCH_instruction;			// registered instruction
 	
 	// === REG/DEC OUTPUTS ===
 	logic [63:0] REG_Da, REG_Db;
@@ -56,6 +56,9 @@ module CPU (clk, rst);
 	logic [4:0] REG_Rd;
 	logic [2:0] REG_ctrl;
 	logic REG_mem_wr, REG_reg_wr, REG_alu_src, REG_mem_to_reg, REG_setFlags, REG_shift, REG_imm_or_D9;
+	
+	logic [63:0] forwardDa, forwardDb; // forwarding logic
+	logic [1:0] forward_selA, forward_selB;
 	
 	// === EXECUTE OUTPUTS ===
 	logic [63:0] EXEC_ALU_result, EXEC_Db;
@@ -74,7 +77,12 @@ module CPU (clk, rst);
 	// program counter
 	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken, .cond_address, .br_address);
 	instructmem inst   (.clk, .address(inst_address), .instruction); // do we need to register instruction?
-	register instructionFetch (.enable(1'b1), .writeData({32'b0, instruction}), .readData(IFETCH_instruction), .clk, .rst);
+	//register instructionFetch (.enable(1'b1), .writeData({32'b0, instruction}), .readData(IFETCH_instruction), .clk, .rst);
+	generate
+		for (i = 0; i < 32; i++) begin: fetch_instr
+			D_FF reg2 (.d(instruction[i]), .q(IFETCH_instruction[i]), .reset(rst), .clk(clk));
+		end
+	endgenerate
 	
 //=======================================================
 // REG/DEC
@@ -83,9 +91,9 @@ module CPU (clk, rst);
 	control_logic CL 	 (.instruction(IFETCH_instruction[31:0]), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
 							  .br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
 							  .negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));
+	
 	// forwarding logic happens in reg thru mem
-	logic [1:0] forward_sel;
-	forwarding_logic FL (.IFETCH_instruction, .REG_instruction, .EXEC_instruction, .forward_sel);
+	forwarding_logic FL (.IFETCH_instruction, .REG_instruction, .EXEC_instruction, .forward_selA, .forward_selB);
 	
 	// REG 2 LOC
 	generate
@@ -94,12 +102,11 @@ module CPU (clk, rst);
 		end
 	endgenerate
 	
-	// DataA mux
-	logic [63:0] forwardDa, forwardDb;
+	// forwarding muxes
 	generate
 		for (i = 0; i < 64; i++) begin: f1
-			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_sel), .out(forwardDa[i]));
-			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_sel), .out(forwardDb[i]));
+			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selA), .out(forwardDa[i]));
+			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selB), .out(forwardDb[i]));
 		end
 	endgenerate
 	

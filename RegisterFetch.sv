@@ -25,8 +25,8 @@ module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, set
 	output logic REG_mem_wr, REG_reg_wr, REG_alu_src, REG_mem_to_reg, REG_setFlags, REG_shift, REG_imm_or_D9;
 	
 	// === REGISTER OUTPUTS ===
-	register DataA (.enable(1), .writeData(Da), .readData(REG_Da), .clk(clk), .rst(rst));
-	register DataB (.enable(1), .writeData(Db), .readData(REG_Db), .clk(clk), .rst(rst));
+	register DataA (.enable(1'b1), .writeData(Da), .readData(REG_Da), .clk(clk), .rst(rst));
+	register DataB (.enable(1'b1), .writeData(Db), .readData(REG_Db), .clk(clk), .rst(rst));
 	
 	// === CONTROL FLAGS ===
 	D_FF MemoryWriteEnable (.d(mem_wr), .q(REG_mem_wr), .reset(rst), .clk(clk));
@@ -46,7 +46,7 @@ module RegisterFetch (Da, Db, Rd, mem_wr, reg_wr, alu_src, ctrl, mem_to_reg, set
 		
 		// === INSTRUCTION ===
 		for (i = 0; i < 32; i++) begin: instr
-			D_FF reg2 (.d(instruction[i]), .q(REG_instruction), .reset(rst), .clk(clk));
+			D_FF reg2 (.d(instruction[i]), .q(REG_instruction[i]), .reset(rst), .clk(clk));
 		end
 		
 		// === D9 ===
