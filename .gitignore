@@ -8,6 +8,7 @@ instructmem.sv.bak
 program_counter.sv.bak
 register.sv.bak
 signExtender.sv.bak
+instructmem.sv
 
 # Simulation wave/do files
 CPUstim_wave.do
