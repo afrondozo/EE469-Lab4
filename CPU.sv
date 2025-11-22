@@ -27,7 +27,7 @@ module CPU (clk, rst);
 	logic [63:0] Da, Db, Dw; 		// ReadRegister1, ReadRegister2, WriteRegister
 	logic [63:0] Dout; 				// data read from the memory
 	
-	logic [63:0] B; 					// B input to ALU
+	logic [63:0] B, A; 			   // inputs to ALU
 	logic [63:0] alu_result; 		// output from ALU
 	logic [63:0] shift_result; 	// output from shifter
 	logic [63:0] op_result; 		// result used for mem_to_reg 
@@ -48,7 +48,7 @@ module CPU (clk, rst);
 	logic [31:0] IFETCH_instruction;			// registered instruction
 	
 	// === REG/DEC OUTPUTS ===
-	logic [63:0] REG_Da, REG_Db;
+	logic [63:0] REG_Da, REG_Db, ALU_src_out, ReadData1, ReadData2;
 	logic [31:0] REG_instruction;
 	logic [11:0] REG_Imm12;
 	logic [8:0] REG_D9;
@@ -75,7 +75,7 @@ module CPU (clk, rst);
 // IFETCH
 //=======================================================
 	// program counter
-	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken, .cond_address, .br_address);
+	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken(1'b0), .cond_address, .br_address);
 	instructmem inst   (.clk, .address(inst_address), .instruction); // do we need to register instruction?
 	//register instructionFetch (.enable(1'b1), .writeData({32'b0, instruction}), .readData(IFETCH_instruction), .clk, .rst);
 	generate
@@ -88,7 +88,7 @@ module CPU (clk, rst);
 // REG/DEC
 //=======================================================
 	// control logic happens right after IFETCH
-	control_logic CL 	 (.instruction(IFETCH_instruction[31:0]), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
+	control_logic CL 	 (.instruction(IFETCH_instruction), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
 							  .br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
 							  .negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));
 	
@@ -97,7 +97,7 @@ module CPU (clk, rst);
 	
 	// REG 2 LOC
 	generate
-		for(i = 0; i < 6; i++) begin: register_input_muxes
+		for(i = 0; i < 5; i++) begin: register_input_muxes
 			multiplexer mux_Reg2Loc_0 (.a(Rd[i]), .b(Rm[i]), .s(reg_2_loc), .y(Ab[i]));
 		end
 	endgenerate
@@ -108,10 +108,19 @@ module CPU (clk, rst);
 			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selA), .out(forwardDa[i]));
 			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selB), .out(forwardDb[i]));
 		end
+		
+//		for (i = 0; i < 64; i = i + 1) begin: simultaneous_write_read // prints the write data if ReadReg and WriteReg are the same
+//		multiplexer simult_1(.a(Da[i]), .b(MEM_Dw[i]), .s(MEM_Rd == Rn), .y(ReadData1[i]));
+//		multiplexer simult_2(.a(Db[i]), .b(MEM_Dw[i]), .s(MEM_Rd == Rm), .y(ReadData2[i]));
+//	end
 	endgenerate
 	
 	regfile register (.clk, .RegWrite(MEM_reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(MEM_Dw), .ReadRegister1(Rn), 
-									.ReadRegister2(Ab), .WriteRegister(MEM_Rd));	
+									.ReadRegister2(Ab), .WriteRegister(MEM_Rd));
+									
+	
+		
+	
 	// TO DO STILL:						
 		// implement REG/DEC reg....
 		// For accelerated branching:
@@ -134,12 +143,28 @@ module CPU (clk, rst);
 	generate
 		for(i = 0; i < 64; i++) begin: datapath_muxes
 			multiplexer mux_imm_sel_0 (.a(D9_se[i]), .b(Imm12_se[i]), .s(REG_imm_or_D9), .y(immediate[i]));
-			multiplexer mux_ALUSrc_0 (.a(REG_Db[i]), .b(immediate[i]), .s(REG_alu_src), .y(B[i]));
+			multiplexer mux_ALUSrc_0 (.a(REG_Db[i]), .b(immediate[i]), .s(REG_alu_src), .y(ALU_src_out[i]));
 			multiplexer mux_shift_0 (.a(alu_result[i]), .b(shift_result[i]), .s(REG_shift), .y(op_result[i]));
+		end
+		// for wb "forwarding"
+		for (i = 0; i < 64; i++) begin: simult_rw
+			multiplexer simult1 (.a(REG_Da[i]), .b(Dw[i]), .s(1'b0), .y(A[i]));
+			multiplexer simult2 (.a(ALU_src_out[i]), .b(Dw[i]), .s(1'b0), .y(B[i]));
 		end
 	endgenerate
 	
-	alu ALU (.A(REG_Da), .B, .cntrl(REG_ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
+	//case for sel
+	logic sel, s;
+	always_comb begin
+		sel = (MEM_Rd == Rn);
+		case(sel)
+			1'b0: s = 0; 
+			1'b1: s = 1;
+			default: s = 0;
+		endcase
+	end
+	
+	alu ALU (.A, .B, .cntrl(REG_ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
 	shifter shifter (.value(REG_Da), .direction(1'b1), .distance(REG_Shamt), .result(shift_result));
 	
 	// flag logic

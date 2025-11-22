@@ -18,12 +18,16 @@ module Execute (ALU_result, Db, Rd, mem_wr, reg_wr, mem_to_reg, clk, rst, instru
 	register aluResult (.enable(1'b1), .writeData(ALU_result), .readData(REG_ALU_result), .clk(clk), .rst(rst));
 	register DataB (.enable(1'b1), .writeData(Db), .readData(REG_Db), .clk(clk), .rst(rst));
 	
-	// === 32-BIT INSTRUCTION OUTPUT ===
 	genvar i;
 	generate
 		// === INSTRUCTION ===
 		for (i = 0; i < 32; i++) begin: instr
 			D_FF reg2 (.d(instruction[i]), .q(REG_instruction[i]), .reset(rst), .clk(clk));
+		end
+		
+		// === RD ===
+		for (i = 0; i < 5; i++) begin: RD_BLOCK
+			D_FF rd (.d(Rd[i]), .q(REG_Rd[i]), .reset(rst), .clk(clk));
 		end
 	endgenerate
 	
