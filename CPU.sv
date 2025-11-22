@@ -105,8 +105,8 @@ module CPU (clk, rst);
 	// forwarding muxes
 	generate
 		for (i = 0; i < 64; i++) begin: f1
-			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selA), .out(forwardDa[i]));
-			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dout[i]), .sel(forward_selB), .out(forwardDb[i]));
+			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selA), .out(forwardDa[i]));
+			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selB), .out(forwardDb[i]));
 		end
 		
 //		for (i = 0; i < 64; i = i + 1) begin: simultaneous_write_read // prints the write data if ReadReg and WriteReg are the same

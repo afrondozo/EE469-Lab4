@@ -114,7 +114,8 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 // Do we need to forward from memory?
 //---------------------------------------
 
-	assign forward_from_memory = (EXEC_instruction[31:21] == 11'b11111000010); // only forward for LDUR calls
+	//assign forward_from_memory = (EXEC_instruction[31:21] == 11'b11111000010); // only forward for LDUR calls
+	assign forward_from_memory = (Rd_mem == Rn || Rd_mem == Rm);
 	
 //---------------------------------------
 // Variable assignment

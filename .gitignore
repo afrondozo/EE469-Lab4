@@ -11,11 +11,9 @@ signExtender.sv.bak
 instructmem.sv
 
 # Simulation wave/do files
-CPUstim_wave.do
 control_logic_wave.do
 instructmem_wave.do
 program_counter_wave.do
-runlab.do
 
 # Quartus/ModelSim project files
 DE1_SoC.qpf
@@ -27,7 +25,6 @@ ProgramTheDE1_SoC.cdf
 Launch_ModelSim.bat
 
 # Folders to ignore
-benchmarks/
 db/
 output_files/
 work/

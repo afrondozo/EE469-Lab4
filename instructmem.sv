@@ -3,10 +3,10 @@
 // two words of the address must be 0).
 //
 // To change the file that is loaded, edit the filename here:
-`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test01_AddiB.arm"
-//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test02_AddsSubs.arm"
+// `define BENCHMARK "U:/EE 469/Lab4/benchmarks/test01_AddiB.arm"
+`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test02_AddsSubs.arm"
 //`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test03_CbzB.arm"
-//`define BENCHMARK "C:/Users/Owner/Desktop/SCHOOL WORK/469LAB/Lab4/benchmarks/test04_LdurStur.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test04_LdurStur.arm"
 //`define BENCHMARK "C:/Users/Owner/Desktop/SCHOOL WORK/469LAB/Lab4/benchmarks/test10_forwarding.arm"
 //`define BENCHMARK "C:/Users/Owner/Desktop/SCHOOL WORK/469LAB/Lab4/benchmarks/test11_Sort.arm"
 //`define BENCHMARK "C:/Users/Owner/Desktop/SCHOOL WORK/469LAB/Lab4/benchmarks/test12_CRC16.arm"
