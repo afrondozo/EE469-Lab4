@@ -76,8 +76,7 @@ module CPU (clk, rst);
 //=======================================================
 	// program counter
 	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken(1'b0), .cond_address, .br_address);
-	instructmem inst   (.clk, .address(inst_address), .instruction); // do we need to register instruction?
-	//register instructionFetch (.enable(1'b1), .writeData({32'b0, instruction}), .readData(IFETCH_instruction), .clk, .rst);
+	instructmem inst   (.clk, .address(inst_address), .instruction);
 	generate
 		for (i = 0; i < 32; i++) begin: fetch_instr
 			D_FF reg2 (.d(instruction[i]), .q(IFETCH_instruction[i]), .reset(rst), .clk(clk));
@@ -108,14 +107,10 @@ module CPU (clk, rst);
 			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selA), .out(forwardDa[i]));
 			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selB), .out(forwardDb[i]));
 		end
-		
-//		for (i = 0; i < 64; i = i + 1) begin: simultaneous_write_read // prints the write data if ReadReg and WriteReg are the same
-//		multiplexer simult_1(.a(Da[i]), .b(MEM_Dw[i]), .s(MEM_Rd == Rn), .y(ReadData1[i]));
-//		multiplexer simult_2(.a(Db[i]), .b(MEM_Dw[i]), .s(MEM_Rd == Rm), .y(ReadData2[i]));
-//	end
+	
 	endgenerate
 	
-	regfile register (.clk, .RegWrite(MEM_reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(MEM_Dw), .ReadRegister1(Rn), 
+	regfile register (.clk(~clk), .RegWrite(MEM_reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(MEM_Dw), .ReadRegister1(Rn), 
 									.ReadRegister2(Ab), .WriteRegister(MEM_Rd));
 									
 	
@@ -164,7 +159,7 @@ module CPU (clk, rst);
 		endcase
 	end
 	
-	alu ALU (.A, .B, .cntrl(REG_ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
+	alu ALU (.A(REG_Da), .B(ALU_src_out), .cntrl(REG_ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
 	shifter shifter (.value(REG_Da), .direction(1'b1), .distance(REG_Shamt), .result(shift_result));
 	
 	// flag logic
