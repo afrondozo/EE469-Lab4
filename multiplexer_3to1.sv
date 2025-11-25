@@ -1,3 +1,4 @@
+
 module multiplexer_3to1 (a, b, c, out, sel);
 	input logic a, b, c;
 	input logic [1:0] sel;

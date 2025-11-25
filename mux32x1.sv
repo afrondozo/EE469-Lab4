@@ -1,3 +1,4 @@
+
 module mux32x1(in, out, s);
 	input logic [31:0] in;
 	input logic [4:0] s;

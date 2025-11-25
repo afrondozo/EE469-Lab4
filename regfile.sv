@@ -1,3 +1,4 @@
+//`timescale 1ps/1ps
 module regfile(ReadData1, ReadData2, WriteData, 
 					 ReadRegister1, ReadRegister2, WriteRegister,
 					 RegWrite, clk);

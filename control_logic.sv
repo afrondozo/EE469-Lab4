@@ -12,7 +12,7 @@
 // ADDI
 // STUR												uses add
 // LDUR												uses add
-
+//`timescale 1ps/1ps
 module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, mem_wr, reg_wr, br_taken, uncond_br, 
 									alu_src, reg_2_loc, mem_to_reg, zero, negative, ctrl, Imm12, D9, setFlags, shift, imm_or_D9, cbZero);
 	input logic [31:0] instruction;
@@ -31,8 +31,19 @@ module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, m
 	logic br_cond;
 	
 	assign op_code = instruction[31:21];
+	assign cond_code = instruction [4:0];
 	
 	always_comb begin
+		case (cond_code)
+			5'b00000: br_cond = zero; // EQ == 
+			5'b00001: br_cond = !(zero); // NE !=
+			5'b01010: br_cond = !(negative); // GE >= 
+			5'b01011: br_cond = negative; // LT <
+			5'b01100: br_cond = !(negative && zero); // GT >
+			5'b01101: br_cond = (negative | zero); // LE <=
+			default: br_cond = 1'b0;
+		endcase
+		
 		casex(op_code)
 			// B type
 			11'b000101XXXXX: begin br_address = instruction[25:0];// B
@@ -41,14 +52,14 @@ module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, m
 			
 			// CB type
 			11'b01010100XXX: begin cond_address = instruction[23:5]; // B.cond
-										  cond_code = instruction[4:0]; // conditional code
-										  ctrl = 3'b011; // subtract
+										  //cond_code = instruction[4:0]; // conditional code
+										  //ctrl = 3'b011; // subtract
 										  mem_wr = 0; reg_wr = 0; br_taken = br_cond; uncond_br = 0; alu_src = 1'bX; reg_2_loc = 1'bX; mem_to_reg = 1'bX; setFlags = 0; shift = 0;
 								  end
 			11'b10110100XXX: begin cond_address = instruction[23:5];// CBZ
 										  Rd = instruction[4:0]; // register being checked
 										  ctrl = 3'b000; // pass
-										  mem_wr = 0; reg_wr = 0; br_taken= cbZero; uncond_br = 0; alu_src = 0; reg_2_loc = 0; mem_to_reg = 1'bX; setFlags = 0; shift = 0;
+										  mem_wr = 0; reg_wr = 0; br_taken = cbZero; uncond_br = 0; alu_src = 0; reg_2_loc = 0; mem_to_reg = 1'bX; setFlags = 0; shift = 0;
 								  end
 								  
 			// R type
@@ -112,51 +123,5 @@ module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, m
 								  end
 			default: br_taken = 1'b0;
 		endcase
-		
-		case (cond_code)
-			5'b00000: br_cond = zero; // EQ == 
-			5'b00001: br_cond = !(zero); // NE !=
-			5'b01010: br_cond = !(negative); // GE >= 
-			5'b01011: br_cond = negative; // LT <
-			5'b01100: br_cond = !(negative && zero); // GT >
-			5'b01101: br_cond = (negative | zero); // LE <=
-			default: br_cond = 1'b0;
-		endcase
-	end
-endmodule
-
-/*
-module control_logic_testbench();
-	logic [31:0] instruction;
-	logic zero, negative;
-	logic [4:0] Rd, Rn, Rm;
-	logic [25:0] br_address;
-	logic [18:0] cond_address;
-	logic [5:0] SHAMT;
-	logic [2:0] ctrl;
-	logic [11:0] Imm12;
-	logic [8:0]  D9;
-	logic mem_wr, reg_wr, br_taken, uncond_br, alu_src, reg_2_loc, mem_to_reg;
-	
-	control_logic dut (.instruction, .Rd, .Rn, .Rm, .br_address, .SHAMT, .mem_wr, .reg_wr, .br_taken, .uncond_br, 
-									.alu_src, .reg_2_loc, .mem_to_reg, .zero, .negative, .ctrl, .Imm12, .D9);
-									
-	initial begin
-		// Test I-types
-		instruction = 32'b1001000100_000000100011_00110_10000; zero = 0; negative = 0; #10; // ADDI X16, X6, #35
-		// Test R-types	
-		instruction = 32'b10101011000_00110_000000_00101_00011; zero = 0; negative = 0; #10; // ADDS X3, X5, X6
-		instruction = 32'b10001010000_00110_000000_00101_00011; zero = 0; negative = 0; #10; // AND X3, X5, X6
-		instruction = 32'b11001010000_00001_000000_00010_00011; zero = 0; negative = 0; #10; // EOR X3, X2, X1
-		instruction = 32'b11010011010_00000_000110_00100_01010; zero = 0; negative = 0; #10; // LSR X10, X4, #6
-		instruction = 32'b11101011000_01000_000000_10000_00011; zero = 0; negative = 0; #10; // SUBS X3, X16, X8
-		// Test CB-Type
-		instruction = 32'b000101_11111111111111111111111101; zero = 0; negative = 0; #10; // B -3
-		instruction = 32'b01010100_1111111111111111011_01011; zero = 0; negative = 1; #10; // B.LT -5
-		instruction = 32'b10110100_1111111111111111101_01100; zero = 0; negative = 0; #10; // CBZ X12, -3
-		// Test D-Type
-		instruction = 32'b11111000010_000001100_00_01111_00110; zero = 0; negative = 0; #10; // LDUR X6, [X15, #12]
-		instruction = 32'b11111000000_000001100_00_01111_00110; zero = 0; negative = 0; #10; // STUR X6, [X15, #12]
 	end
 endmodule 
-*/

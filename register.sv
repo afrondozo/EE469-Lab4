@@ -1,4 +1,5 @@
 // 64 bit register
+//`timescale 1ps/1ps
 module register (enable, writeData, readData, clk, rst);
 	input logic enable, clk, rst;
 	input logic [63:0] writeData;

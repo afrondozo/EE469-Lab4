@@ -2,7 +2,7 @@
 // The multipler can be used to implement the MUL instruction,
 // and the shifter can be used to implement LSL and/or LSR.
 // DO NOT USE for any other purpose.
-
+//`timescale 1ps/1ps
 module mult (
 	input logic		[63:0]	A, B,
 	input logic					doSigned,				// 1: signed multiply 0: unsigned multiply

@@ -1,3 +1,4 @@
+//`timescale 1ps/1ps
 module CPU (clk, rst);
 	input logic clk, rst;
 	
@@ -115,7 +116,7 @@ module CPU (clk, rst);
 		end
 	endgenerate
 	
-	// === COMPUTE BRANCH ADDRESS ====
+	// === COMPUTE BRANCH ADDRESS ===
 	signExtender #(.IN_WIDTH(19)) condBr19  (.in(cond_address), .out(cond_address_se), .SE(1'b1));
 	signExtender #(.IN_WIDTH(26)) br26 (.in(br_address), .out(br_address_se), .SE(1'b1));
 	shifter shifted (.value(pre_shift), .direction(1'b0), .distance(6'd2), .result(post_shift));
@@ -127,6 +128,7 @@ module CPU (clk, rst);
 	endgenerate	
 	
 	// === BRANCH LOGIC === 
+	//zeroChecker checkCBZ (.result(fowardDb), .isZero);
 	alu checkCBZ (.A(), .B(forwardDb), .cntrl(3'b000), .result(), .zero(isZero), .negative(), .carry_out(), .overflow()); // for computing CBZ
 	
 

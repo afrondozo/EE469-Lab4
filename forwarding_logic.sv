@@ -110,7 +110,8 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 			11'b10101011000: begin
 										if (forward_from_alu && forward_from_mem && (Rm == Rd_alu) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b01; end
 										else if (forward_from_alu && forward_from_mem && (Rm == Rd_mem) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b10; end
-										else if (forward_from_alu && forward_from_mem && (Rm == Rd_alu) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b01; end
+										else if (forward_from_mem && (Rm == Rd_mem) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b10; end
+										else if (forward_from_alu && (Rm == Rd_alu) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b01; end
 										else if (forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
 										else if (forward_from_alu && (Rm == Rd_alu)) begin forward_selA = 2'b00; forward_selB = 2'b01; end
 										else if (forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
@@ -130,6 +131,8 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 			11'b11101011000: begin // R-types(excluding LS): Rn Rm output dependent
 										if (forward_from_alu && forward_from_mem && (Rm == Rd_alu) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b01; end
 										else if (forward_from_alu && forward_from_mem && (Rm == Rd_mem) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b10; end
+										else if (forward_from_mem && (Rm == Rd_mem) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b10; end
+										else if (forward_from_alu && (Rm == Rd_alu) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b01; end
 										else if (forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
 										else if (forward_from_alu && (Rm == Rd_alu)) begin forward_selA = 2'b00; forward_selB = 2'b01; end
 										else if (forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
