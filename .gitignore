@@ -9,6 +9,8 @@ program_counter.sv.bak
 register.sv.bak
 signExtender.sv.bak
 instructmem.sv
+Lab4.qpf
+Lab4.qsf
 
 # Simulation wave/do files
 control_logic_wave.do

@@ -57,9 +57,6 @@ module CPU (clk, rst);
 	logic [2:0] REG_ctrl;
 	logic REG_mem_wr, REG_reg_wr, REG_alu_src, REG_mem_to_reg, REG_setFlags, REG_shift, REG_imm_or_D9;
 	
-	logic [63:0] forwardDa, forwardDb; // forwarding logic
-	logic [1:0] forward_selA, forward_selB;
-	
 	// === EXECUTE OUTPUTS ===
 	logic [63:0] EXEC_ALU_result, EXEC_Db;
 	logic [31:0] EXEC_instruction;
@@ -70,57 +67,78 @@ module CPU (clk, rst);
 	logic [63:0] MEM_Dw;
 	logic [4:0] MEM_Rd;
 	logic MEM_reg_wr;
+	
+	// === FORWARDING LOGIC ===
+	logic [63:0] forwardDa, forwardDb;
+	logic [1:0] forward_selA, forward_selB;
+	
+	// === PROGRAM COUNTER LOGIC ===
+	logic [63:0] PC, PC_buffered, nextPC, PC_plus_4, PC_plus_branch;
+	logic [63:0] cond_address_se, br_address_se, pre_shift, post_shift;
+	logic isZero, br_taken_delayed;
 
 //=======================================================
 // IFETCH
 //=======================================================
-	// program counter
-	program_counter pc (.clk, .rst, .address(inst_address), .uncond_br, .br_taken(1'b0), .cond_address, .br_address);
-	instructmem inst   (.clk, .address(inst_address), .instruction);
+	PC_register pc (.clk, .rst, .currPC(PC), .nextPC);
+	register pcBuffer (.enable(1'b1), .writeData(PC), .readData(PC_buffered), .clk, .rst);
+	instructmem inst   (.clk, .address(PC), .instruction);
 	generate
+		// IFETCH -> REG/DECODE
 		for (i = 0; i < 32; i++) begin: fetch_instr
 			D_FF reg2 (.d(instruction[i]), .q(IFETCH_instruction[i]), .reset(rst), .clk(clk));
 		end
+		
+		// PC + 4 OR PC + BRANCH ADDRESS MUX
+		for (i = 0; i < 64; i++) begin: newPC
+			multiplexer pcMux (.a(PC_plus_4[i]), .b(PC_plus_branch[i]), .s(br_taken/*br_taken from control logic*/), .y(nextPC[i]));
+		end
 	endgenerate
 	
+	// calculate PC + 4 in IFETCH
+	alu adder (.A(PC), .B(64'd4), .cntrl(3'b010), .result(PC_plus_4), .zero(), .negative(), .carry_out(), .overflow());
+		
 //=======================================================
 // REG/DEC
 //=======================================================
 	// control logic happens right after IFETCH
 	control_logic CL 	 (.instruction(IFETCH_instruction), .Rd, .Rn, .Rm, .br_address, .cond_address, .SHAMT, .mem_wr, .reg_wr, 
-							  .br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_flag), 
-							  .negative(neg_flag), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(zero));
+							  .br_taken, .uncond_br, .alu_src, .reg_2_loc, .mem_to_reg, .zero(zero_mux_in), 
+							  .negative(neg_mux_in), .ctrl, .Imm12, .D9, .shift, .imm_or_D9, .setFlags, .cbZero(isZero));
 	
-	// forwarding logic happens in reg thru mem
+	// === FORWARDING LOGIC ===
 	forwarding_logic FL (.IFETCH_instruction, .REG_instruction, .EXEC_instruction, .forward_selA, .forward_selB);
-	
-	// REG 2 LOC
-	generate
-		for(i = 0; i < 5; i++) begin: register_input_muxes
-			multiplexer mux_Reg2Loc_0 (.a(Rd[i]), .b(Rm[i]), .s(reg_2_loc), .y(Ab[i]));
-		end
-	endgenerate
-	
-	// forwarding muxes
-	generate
+	generate // forwarding muxes
 		for (i = 0; i < 64; i++) begin: f1
 			multiplexer_3to1 m1 (.a(Da[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selA), .out(forwardDa[i]));
 			multiplexer_3to1 m2 (.a(Db[i]), .b(op_result[i]), .c(Dw[i]), .sel(forward_selB), .out(forwardDb[i]));
 		end
-	
 	endgenerate
 	
+	// === COMPUTE BRANCH ADDRESS ====
+	signExtender #(.IN_WIDTH(19)) condBr19  (.in(cond_address), .out(cond_address_se), .SE(1'b1));
+	signExtender #(.IN_WIDTH(26)) br26 (.in(br_address), .out(br_address_se), .SE(1'b1));
+	shifter shifted (.value(pre_shift), .direction(1'b0), .distance(6'd2), .result(post_shift));
+	alu br_adder (.A(PC_buffered), .B(post_shift), .cntrl(3'b010), .result(PC_plus_branch), .zero(), .negative(), .carry_out(), .overflow());
+	generate // conditional or unconditional mux
+		for(i = 0; i < 64; i++) begin: muxes
+			multiplexer cond_mux0 (.a(cond_address_se[i]), .b(br_address_se[i]), .s(uncond_br), .y(pre_shift[i]));
+		end
+	endgenerate	
+	
+	// === BRANCH LOGIC === 
+	alu checkCBZ (.A(), .B(forwardDb), .cntrl(3'b000), .result(), .zero(isZero), .negative(), .carry_out(), .overflow()); // for computing CBZ
+	
+
+	// === MAIN REGISTER ===
+	generate // reg2loc
+		for(i = 0; i < 5; i++) begin: register_input_muxes
+			multiplexer mux_Reg2Loc_0 (.a(Rd[i]), .b(Rm[i]), .s(reg_2_loc), .y(Ab[i]));
+		end
+	endgenerate
 	regfile register (.clk(~clk), .RegWrite(MEM_reg_wr), .ReadData1(Da), .ReadData2(Db), .WriteData(MEM_Dw), .ReadRegister1(Rn), 
 									.ReadRegister2(Ab), .WriteRegister(MEM_Rd));
-									
 	
-		
-	
-	// TO DO STILL:						
-		// implement REG/DEC reg....
-		// For accelerated branching:
-		// take PC from registered IFETCH.
-		//	calculate cond_address or br_address and send it right back to PC
 	
 	// send register results to next stage
 	RegisterFetch regDec (.Da(forwardDa), .Db(forwardDb), .Rd, .mem_wr, .reg_wr, .alu_src, .ctrl, .mem_to_reg, .setFlags, .shift, .imm_or_D9, .D9, .Imm12, .Shamt(SHAMT), .clk, .rst, .instruction(IFETCH_instruction[31:0]),
@@ -141,32 +159,16 @@ module CPU (clk, rst);
 			multiplexer mux_ALUSrc_0 (.a(REG_Db[i]), .b(immediate[i]), .s(REG_alu_src), .y(ALU_src_out[i]));
 			multiplexer mux_shift_0 (.a(alu_result[i]), .b(shift_result[i]), .s(REG_shift), .y(op_result[i]));
 		end
-		// for wb "forwarding"
-		for (i = 0; i < 64; i++) begin: simult_rw
-			multiplexer simult1 (.a(REG_Da[i]), .b(Dw[i]), .s(1'b0), .y(A[i]));
-			multiplexer simult2 (.a(ALU_src_out[i]), .b(Dw[i]), .s(1'b0), .y(B[i]));
-		end
 	endgenerate
-	
-	//case for sel
-	logic sel, s;
-	always_comb begin
-		sel = (MEM_Rd == Rn);
-		case(sel)
-			1'b0: s = 0; 
-			1'b1: s = 1;
-			default: s = 0;
-		endcase
-	end
 	
 	alu ALU (.A(REG_Da), .B(ALU_src_out), .cntrl(REG_ctrl), .result(alu_result), .negative, .zero, .overflow(), .carry_out()); 
 	shifter shifter (.value(REG_Da), .direction(1'b1), .distance(REG_Shamt), .result(shift_result));
 	
-	// flag logic
+	// Flag register
 	multiplexer zero_mux(.a(zero_flag), .b(zero), .s(REG_setFlags), .y(zero_mux_in));
 	multiplexer neg_mux(.a(neg_flag), .b(negative), .s(REG_setFlags), .y(neg_mux_in));
-	D_FF zero_reg (.q(zero_flag), .d(zero_mux_in), .clk, .reset(1'b0));
-	D_FF neg_reg(.q(neg_flag), .d(neg_mux_in), .clk, .reset(1'b0));
+	D_FF zero_reg (.q(zero_flag), .d(zero_mux_in), .clk, .reset(rst));
+	D_FF neg_reg(.q(neg_flag), .d(neg_mux_in), .clk, .reset(rst));
 	
 	// send results to memory stage
 	Execute toMemory (.ALU_result(op_result), .Db(REG_Db), .Rd(REG_Rd), .mem_wr(REG_mem_wr), .reg_wr(REG_reg_wr), 

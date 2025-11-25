@@ -39,14 +39,14 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 			11'b01010100XXX: forward_from_alu = 1'b0;
 			11'b10110100XXX: forward_from_alu = 1'b0;
 			// R type
-			11'b10001010000: forward_from_alu = 1'b1; // we only forward from ALU with R and I types
-			11'b10001011000: forward_from_alu = 1'b1;
-			11'b10101011000: forward_from_alu = 1'b1;
-			11'b11001010000: forward_from_alu = 1'b1;
-			11'b11010011010: forward_from_alu = 1'b1;
-			11'b11101011000: forward_from_alu = 1'b1;
+			11'b10001010000: forward_from_alu = Rd_alu != 5'd31; // we only forward from ALU with R and I types
+			11'b10001011000: forward_from_alu = Rd_alu != 5'd31;
+			11'b10101011000: forward_from_alu = Rd_alu != 5'd31;
+			11'b11001010000: forward_from_alu = Rd_alu != 5'd31;
+			11'b11010011010: forward_from_alu = Rd_alu != 5'd31;
+			11'b11101011000: forward_from_alu = Rd_alu != 5'd31;
 			// I type
-			11'b1001000100X: forward_from_alu = 1'b1;
+			11'b1001000100X: forward_from_alu = Rd_alu != 5'd31;
 			// D type
 			11'b11111000000: forward_from_alu = 1'b0;
 			11'b11111000010: forward_from_alu = 1'b0;
@@ -59,17 +59,17 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 			11'b01010100XXX: forward_from_mem = 1'b0;
 			11'b10110100XXX: forward_from_mem = 1'b0;
 			// R type
-			11'b10001010000: forward_from_mem = 1'b1; // we only forward from ALU with R and I types
-			11'b10001011000: forward_from_mem = 1'b1;
-			11'b10101011000: forward_from_mem = 1'b1;
-			11'b11001010000: forward_from_mem = 1'b1;
-			11'b11010011010: forward_from_mem = 1'b1;
-			11'b11101011000: forward_from_mem = 1'b1;
+			11'b10001010000: forward_from_mem = Rd_mem != 5'd31; // we only forward from ALU with R and I types
+			11'b10001011000: forward_from_mem = Rd_mem != 5'd31;
+			11'b10101011000: forward_from_mem = Rd_mem != 5'd31;
+			11'b11001010000: forward_from_mem = Rd_mem != 5'd31;
+			11'b11010011010: forward_from_mem = Rd_mem != 5'd31;
+			11'b11101011000: forward_from_mem = Rd_mem != 5'd31;
 			// I type
-			11'b1001000100X: forward_from_mem = 1'b1;
+			11'b1001000100X: forward_from_mem = Rd_mem != 5'd31;
 			// D type
 			11'b11111000000: forward_from_mem = 1'b0;
-			11'b11111000010: forward_from_mem = 1'b0;
+			11'b11111000010: forward_from_mem = Rd_mem != 5'd31;
 			default: forward_from_mem = 1'b0;
 		endcase
 		
@@ -110,6 +110,7 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 			11'b10101011000: begin
 										if (forward_from_alu && forward_from_mem && (Rm == Rd_alu) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b01; end
 										else if (forward_from_alu && forward_from_mem && (Rm == Rd_mem) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b10; end
+										else if (forward_from_alu && forward_from_mem && (Rm == Rd_alu) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b01; end
 										else if (forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
 										else if (forward_from_alu && (Rm == Rd_alu)) begin forward_selA = 2'b00; forward_selB = 2'b01; end
 										else if (forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
@@ -149,16 +150,20 @@ module forwarding_logic (IFETCH_instruction, REG_instruction, EXEC_instruction, 
 										else begin forward_selA = 2'b00; forward_selB = 2'b00; end
 								  end
 			// D type
-			11'b11111000000: begin // D-types: Rn output dependent
+			11'b11111000000: begin // STUR: Rd output dependent
+										if (forward_from_alu && forward_from_mem && (Rd == Rd_alu) && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b01; end
+										else if (forward_from_alu && forward_from_mem && (Rd == Rd_mem) && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b10; end
+										else if (forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
+										else if (forward_from_alu && (Rd == Rd_alu)) begin forward_selA = 2'b00; forward_selB = 2'b01; end
+										else if (forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
+										else if (forward_from_mem && (Rd == Rd_mem)) begin forward_selA = 2'b00; forward_selB = 2'b10; end
+										else begin forward_selA = 2'b00; forward_selB = 2'b00; end
+								  end
+			11'b11111000010: begin // LDUR: Rn output dependent
 										if(forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
 										else if(forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
 										else begin forward_selA = 2'b00; forward_selB = 2'b00; end
 								  end
-			11'b11111000010: begin
-										if(forward_from_alu && (Rn == Rd_alu)) begin forward_selA = 2'b01; forward_selB = 2'b00; end
-										else if(forward_from_mem && (Rn == Rd_mem)) begin forward_selA = 2'b10; forward_selB = 2'b00; end
-										else begin forward_selA = 2'b00; forward_selB = 2'b00; end
-								  end
-		endcase
+		endcase 
 	end
 endmodule 

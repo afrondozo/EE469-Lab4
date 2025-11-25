@@ -13,11 +13,11 @@ module program_counter(address, clk, rst, uncond_br, br_taken, cond_address, br_
 	register pc (.enable(1'b1), .writeData(next_address), .readData(current_address), .clk, .rst);
 	
 	// SIGNED sign extension for branch instruction addresses
-	signExtender #(.IN_WIDTH(19)) condBr19  (.in(cond_address), .out(cond_address_se), .SE(1'b1));
-	signExtender #(.IN_WIDTH(26)) br26 (.in(br_address), .out(br_address_se), .SE(1'b1));
+//	signExtender #(.IN_WIDTH(19)) condBr19  (.in(cond_address), .out(cond_address_se), .SE(1'b1));
+//	signExtender #(.IN_WIDTH(26)) br26 (.in(br_address), .out(br_address_se), .SE(1'b1));
 	
 	// next address datapath
-	alu adder (.A(current_address), .B(64'h0000000000000004), .cntrl(3'b010), .result(adder_out), .zero(), .negative(), .carry_out(), .overflow());
+	//alu adder (.A(current_address), .B(64'h0000000000000004), .cntrl(3'b010), .result(adder_out), .zero(), .negative(), .carry_out(), .overflow());
 	alu br_adder (.A(current_address), .B(post_shift), .cntrl(3'b010), .result(br_adder_out), .zero(), .negative(), .carry_out(), .overflow());
 	
 	// branch datapath

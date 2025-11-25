@@ -1,7 +1,7 @@
 `timescale 1ns/10ps
 module CPUstim ();
 
-	parameter ClockDelay = 10000;
+	parameter ClockDelay = 20000;
 
 	logic clk, rst;
 	
@@ -13,8 +13,8 @@ module CPUstim ();
 	end
 	
 	initial begin
-		rst = 1; #100000;
-		rst = 0; #100000;
+		rst = 1; #20000;
+		rst = 0; #20000;
 		#10000000;
 		//#10000000;
 		//#10000000;

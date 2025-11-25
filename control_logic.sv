@@ -110,6 +110,7 @@ module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, m
 										  ctrl = 3'b010; // add
 										  mem_wr = 0; reg_wr = 1; br_taken = 0; uncond_br = 1'bX; alu_src = 1; reg_2_loc = 1'b0; mem_to_reg = 1; setFlags = 0; shift = 0; imm_or_D9 = 0;
 								  end
+			default: br_taken = 1'b0;
 		endcase
 		
 		case (cond_code)
@@ -119,6 +120,7 @@ module control_logic(instruction, Rd, Rn, Rm, br_address, cond_address, SHAMT, m
 			5'b01011: br_cond = negative; // LT <
 			5'b01100: br_cond = !(negative && zero); // GT >
 			5'b01101: br_cond = (negative | zero); // LE <=
+			default: br_cond = 1'b0;
 		endcase
 	end
 endmodule
