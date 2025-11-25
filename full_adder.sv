@@ -1,5 +1,4 @@
 `timescale 1ps/1ps
-
 // Handles mathematic operations (add & subtract)
 
 module full_adder(a, b, c_in, sub, c_out, out);

@@ -1,3 +1,4 @@
+//`timescale 1ps/1ps
 module regfile(ReadData1, ReadData2, WriteData, 
 					 ReadRegister1, ReadRegister2, WriteRegister,
 					 RegWrite, clk);
@@ -8,7 +9,7 @@ module regfile(ReadData1, ReadData2, WriteData,
 	
 	// two 32x64 mux for read out, each takes readreg directly 
 	 
-	logic [63:0] readOut1, readOut2;
+	logic [63:0] readOut1, readOut2, DataA, DataB;
 	logic [31:0][63:0] readReg;
 	logic [63:0][31:0] readIn;
 	logic [31:0] decoderOut;
@@ -22,7 +23,7 @@ module regfile(ReadData1, ReadData2, WriteData,
 			register reg0 (.enable(RegWrite && decoderOut[i]), .writeData(WriteData), .readData(readReg[i]), .clk, .rst(1'b0));
 		end
 		
-		for( i = 0; i < 64; i = i + 1) begin: flip	// flip the array to plug columns into mux
+		for (i = 0; i < 64; i = i + 1) begin: flip	// flip the array to plug columns into mux
 			for( j = 0; j < 32; j = j + 1) begin: flip2
 				assign readIn[i][j] = readReg[j][i];
 			end
@@ -32,6 +33,10 @@ module regfile(ReadData1, ReadData2, WriteData,
 			mux32x1 readone0 (.in(readIn[i]), .out(ReadData1[i]), .s(ReadRegister1));
 			mux32x1 readtwo0 (.in(readIn[i]), .out(ReadData2[i]), .s(ReadRegister2));
 		end
+//		for (i = 0; i < 64; i = i + 1) begin: simultaneous_write_read // prints the write data if ReadReg and WriteReg are the same
+//			multiplexer simult_1(.a(DataA[i]), .b(WriteData[i]), .s(ReadRegister1 == WriteRegister), .y(ReadData1[i]));
+//			multiplexer simult_2(.a(DataB[i]), .b(WriteData[i]), .s(ReadRegister2 == WriteRegister), .y(ReadData2[i]));
+//		end
 	endgenerate
 	
 	// hardcode reg 31

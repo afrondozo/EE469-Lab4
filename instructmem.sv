@@ -3,15 +3,17 @@
 // two words of the address must be 0).
 //
 // To change the file that is loaded, edit the filename here:
-//`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test01_AddiB.arm"
-//`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test02_AddsSubs.arm"
-//`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test03_CbzB.arm"
-//`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test04_LdurStur.arm"
-//`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test11_Sort.arm"
-`define BENCHMARK "U:/EE 469/Lab3/benchmarks/test12_CRC16.arm"
+// `define BENCHMARK "D:/EE469-Lab4/benchmarks/test01_AddiB.arm"
+//`define BENCHMARK "D:/EE469-Lab4/benchmarks/test02_AddsSubs.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test03_CbzB.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test04_LdurStur.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test10_forwarding.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test05_Blt.arm"
+`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test11_Sort.arm"
+//`define BENCHMARK "U:/EE 469/Lab4/benchmarks/test12_CRC16.arm"
 
 `timescale 1ns/10ps
-
+//`timescale 1ps/1ps
 // How many bytes are in our memory?  Must be a power of two.
 `define INSTRUCT_MEM_SIZE		1024
 	

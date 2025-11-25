@@ -1,3 +1,4 @@
+`timescale 1ps/1ps
 module decoder (out, addr);
 	input logic [4:0] addr;
 	output logic [31:0] out;
