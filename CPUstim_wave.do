@@ -36,6 +36,8 @@ add wave -noupdate /CPUstim/dut/zero_flag
 add wave -noupdate /CPUstim/dut/br_taken
 add wave -noupdate /CPUstim/dut/zero_mux_in
 add wave -noupdate /CPUstim/dut/neg_mux_in
+add wave -noupdate -radix decimal /CPUstim/dut/checkCBZ/result
+add wave -noupdate /CPUstim/dut/checkCBZ/isZero
 add wave -noupdate /CPUstim/dut/isZero
 add wave -noupdate /CPUstim/dut/CL/br_taken
 add wave -noupdate /CPUstim/dut/CL/br_cond
@@ -67,7 +69,7 @@ add wave -noupdate -group Hide -label MEM_dw -radix decimal /CPUstim/dut/MemoryT
 add wave -noupdate -group Hide -radix decimal /CPUstim/dut/register/DataA
 add wave -noupdate -group Hide -radix decimal /CPUstim/dut/register/DataB
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {6619423710 ps} 0}
+WaveRestoreCursors {{Cursor 1} {26264486 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 197
@@ -83,4 +85,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {3764986317 ps} {4033421773 ps}
+WaveRestoreZoom {0 ps} {268435456 ps}

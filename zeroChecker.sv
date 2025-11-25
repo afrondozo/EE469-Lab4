@@ -17,4 +17,4 @@ module zeroChecker (result, isZero);
 	endgenerate
 	
 	nor #(50) nor1 (isZero, zero_check_2[0], zero_check_2[1], zero_check_2[2], zero_check_2[3]); // nor zero_check_2(contains every bit of result or'd)
-endmodule
+endmodule 

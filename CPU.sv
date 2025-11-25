@@ -128,9 +128,7 @@ module CPU (clk, rst);
 	endgenerate	
 	
 	// === BRANCH LOGIC === 
-	//zeroChecker checkCBZ (.result(fowardDb), .isZero);
-	alu checkCBZ (.A(), .B(forwardDb), .cntrl(3'b000), .result(), .zero(isZero), .negative(), .carry_out(), .overflow()); // for computing CBZ
-	
+	zeroChecker checkCBZ (.result(forwardDb), .isZero(isZero));
 
 	// === MAIN REGISTER ===
 	generate // reg2loc

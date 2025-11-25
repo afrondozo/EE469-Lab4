@@ -16,7 +16,7 @@ module CPUstim ();
 		rst = 1; #10000;
 		rst = 0; #10000;
 		#10000000;
-		#4000000;
+		#300000;
 		$stop;
 	end
 endmodule 
